@@ -126,16 +126,19 @@
       }
     }
 
-    if (link && link.trim() !== "") {
-      // Valid link: hide UI and ping twice
-      uiElements.forEach(el => el.style.display = 'none');
+    function pingMultipleTimes(url, times) {
+      for (let i = 0; i < times; i++) {
+        ping(url);
+      }
+  }  
 
-      link = ensureHttps(link.trim());
-      (async () => {
-        await ping(link);
-        await ping(link);
-      })();
+// call it but don’t await:
+pingMultipleTimes(link, 5);
 
+  if (link && link.trim() !== "") {
+  //...
+    pingMultipleTimes(link, 5)
+  }
     } else {
       // No link or empty: show UI with copy box
       uiElements.forEach(el => el.style.display = '');
