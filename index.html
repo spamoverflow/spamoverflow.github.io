@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SpamOverflow</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100vh; width: 100vw;
+      display: flex; justify-content: center; align-items: center;
+      font-family: Arial, sans-serif;
+      background: #f9f5f1;
+      color: #333;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-family: 'Fira Code', monospace;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      width: fit-content;
+      max-width: 90%;
+    }
+
+    .link-box {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: #000;
+      white-space: nowrap;
+      overflow-x: auto;
+      max-width: 80vw;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #444;
+      transition: color 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      color: #000;
+    }
+
+    .copy-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>SpamOverflow</h1>
+  <p>Share this cozy link:</p>
+
+  <div class="container hidden" id="copy-container">
+    <div class="link-box" id="copy-link">Loading...</div>
+    <button class="copy-btn" onclick="copyLink()" aria-label="Copy link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v16h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 18H8V7h11v16z"/>
+      </svg>
+    </button>
+  </div>
+
+  <p id="no-link-msg" class="footer">No link provided. Use <code>?link=</code> in the URL.</p>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    let link = params.get('link');
+    const uiElements = [
+      document.querySelector('h1'),
+      document.querySelector('p'),
+      document.getElementById('copy-container'),
+      document.getElementById('no-link-msg'),
+    ];
+
+    const copyContainer = document.getElementById('copy-container');
+    const copyLinkEl = document.getElementById('copy-link');
+    const noLinkMsg = document.getElementById('no-link-msg');
+
+    function ensureHttps(url) {
+      if (!/^https?:\/\//i.test(url)) {
+        return 'https://' + url;
+      }
+      return url;
+    }
+
+    async function ping(url) {
+      try {
+        await fetch(url, {mode: 'no-cors'});
+        console.log(`Pinged ${url}`);
+      } catch(e) {
+        console.warn(`Failed to ping ${url}`, e);
+      }
+    }
+
+    if (link && link.trim() !== "") {
+      // Valid link: hide UI and ping twice
+      uiElements.forEach(el => el.style.display = 'none');
+
+      link = ensureHttps(link.trim());
+      (async () => {
+        await ping(link);
+        await ping(link);
+      })();
+
+    } else {
+      // No link or empty: show UI with copy box
+      uiElements.forEach(el => el.style.display = '');
+
+      const baseUrl = 'https://spamoverflow.github.io?link=';
+      copyLinkEl.textContent = baseUrl;
+      noLinkMsg.textContent = "No link provided. Use ?link= in the URL.";
+
+      copyContainer.classList.remove('hidden');
+    }
+
+    function copyLink() {
+      const text = copyLinkEl.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const icon = document.querySelector('.copy-btn svg');
+        icon.style.fill = "#28a745";
+        setTimeout(() => {
+          icon.style.fill = "";
+        }, 1200);
+      });
+    }
+  </script>
+</body>
+</html>
